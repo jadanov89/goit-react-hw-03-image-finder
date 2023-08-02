@@ -5,8 +5,8 @@ import Loader from './Loader/Loader';
 import { Api, searchPixabayAPI } from ".././Api/Api";
 import Modal from "./Modal/Modal";
 
+
 class App extends Component {
-  
   state = {
     bigImagePath: "",
     loader: false,
@@ -16,7 +16,7 @@ class App extends Component {
     search: "",
     modal: false,
   }
-//llll
+
   componentDidUpdate(prevProps, prevState) {
     const { search, page } = this.state;
     if ((search && prevState.search !== search) || page !== prevState.page) {
@@ -28,32 +28,9 @@ class App extends Component {
     this.setState({ 
       search,
       page: 1,
-    })
+      hits: [], // Clear the hits array when starting a new search
+    });
   }
-
-  // async fetchImages() {
-  //   const { search, page } = this.state;
-  //   this.setState({
-  //     loader: true,
-  //   });
-      
-  //   try {
-  //     const data = await Api(search, page);
-  //     this.setState(({ hits }) => {
-  //       return {
-  //         hits: page === 1 ? data.hits : [...hits, ...data.hits],
-  //       }
-  //     });
-  //   } catch (error) {
-  //     this.setState({
-  //       error
-  //     });
-  //   } finally  {
-  //     this.setState({
-  //       loader: false,
-  //     });
-  //   }
-  // }
 
   async fetchImages() {
     const { search, page } = this.state;
@@ -68,22 +45,21 @@ class App extends Component {
       } else {
         data = await Api(page);
       }
-      this.setState(({ hits }) => {
-        return {
-          hits: page === 1 ? data.hits : [...hits, ...data.hits],
-        }
-      });
+      setTimeout(() => {
+        this.setState(({ hits }) => {
+          return {
+            hits: page === 1 ? data.hits : [...hits, ...data.hits],
+            loader: false,
+          }
+        });
+      }, 300);
     } catch (error) {
       this.setState({
-        error
-      });
-    } finally  {
-      this.setState({
+        error,
         loader: false,
       });
     }
   }
-  
 
   loadMore = () => {
     this.setState(({ page }) => {
@@ -102,6 +78,7 @@ class App extends Component {
   render() {
     const { loader, hits, error, bigImagePath } = this.state;
     const { onSearch, loadMore, toggleModal } = this;
+
     return (
       <div>
         <Searchbar onSearch={onSearch} />
@@ -110,22 +87,43 @@ class App extends Component {
             <img src={bigImagePath} alt="" />
           </Modal>
         )}
+
         {error && <p>!!!</p>}
        
         <ImageGallery image={hits} toggleModal={toggleModal} />
-        {loader && <Loader
-          height={80}
-          width={80}
-          radius={9}
-          color="green"
-          ariaLabel="loading"
-          wrapperStyle
-          wrapperClass
-        />}
+        {loader && (
+          <Loader
+            click={loadMore}
+            loading={loader}
+          />
+        )}
         {hits.length > 0 && <Loader click={loadMore} />}
       </div>
     );
   }
-};
-  
+}
+
 export default App;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
