@@ -5,7 +5,6 @@ import Loader from './Loader/Loader';
 import { Api, searchPixabayAPI } from ".././Api/Api";
 import Modal from "./Modal/Modal";
 
-
 class App extends Component {
   state = {
     bigImagePath: "",
@@ -15,6 +14,7 @@ class App extends Component {
     error: null,
     search: "",
     modal: false,
+    loadingMore: false, // Додали новий стан для відстеження підзавантаження контенту
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -50,6 +50,7 @@ class App extends Component {
           return {
             hits: page === 1 ? data.hits : [...hits, ...data.hits],
             loader: false,
+            loadingMore: false, // Закінчили підзавантаження, зупинивши Loader
           }
         });
       }, 300);
@@ -57,15 +58,18 @@ class App extends Component {
       this.setState({
         error,
         loader: false,
+        loadingMore: false, // Закінчили підзавантаження, зупинивши Loader у разі помилки
       });
     }
   }
 
   loadMore = () => {
-    this.setState(({ page }) => {
-      return {
-        page: page + 1,
-      };
+    this.setState({ loadingMore: true }, () => {
+      this.setState(({ page }) => {
+        return {
+          page: page + 1,
+        };
+      });
     });
   }
 
@@ -76,7 +80,7 @@ class App extends Component {
   }
 
   render() {
-    const { loader, hits, error, bigImagePath } = this.state;
+    const { loader, hits, error, bigImagePath, loadingMore } = this.state;
     const { onSearch, loadMore, toggleModal } = this;
 
     return (
@@ -91,39 +95,14 @@ class App extends Component {
         {error && <p>!!!</p>}
        
         <ImageGallery image={hits} toggleModal={toggleModal} />
-        {loader && (
-          <Loader
-            click={loadMore}
-            loading={loader}
-          />
-        )}
-        {hits.length > 0 && <Loader click={loadMore} />}
+
+        {/* Відображаємо кнопку "Load More" або Loader, залежно від значення loadingMore */}
+        {!loadingMore && hits.length > 0 && <Loader click={loadMore} />}
+        {loadingMore && <Loader loading={true} />}
+
       </div>
     );
   }
 }
 
 export default App;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
